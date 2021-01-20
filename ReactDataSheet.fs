@@ -44,28 +44,22 @@ with
 
 and CellsChangedArgs = {
     cell: Cell
-    /// The row index
-    row: int
-    /// The column index
-    col: int
+    row: RowIndex
+    col: ColumnIndex
     /// The new value
     value: obj
 }
 
 and CellsAddedArgs = {
-    /// The row index
-    row: int
-    /// The column index
-    col: int
+    row: RowIndex
+    col: ColumnIndex
     /// The new value
     value: obj
 }
 
 and Location = {
-    /// Row index
-    i: int
-    /// Column index
-    j: int
+    i: RowIndex
+    j: ColumnIndex
 }
 
 and Selection = {
@@ -79,8 +73,8 @@ with
 
 and DataEditorProps = {
     value: obj
-    row: int
-    col: int
+    row: RowIndex
+    col: ColumnIndex
     cell: Cell
     onChange: (string -> unit)
     onKeyDown: (Browser.Types.KeyboardEvent -> unit)
@@ -90,8 +84,8 @@ and DataEditorProps = {
 
 and ValueViewerProps = {
     value: obj
-    row: int
-    col: int
+    row: RowIndex
+    col: ColumnIndex
     cell: obj
 }
 
@@ -110,11 +104,17 @@ and RowRendererProps = {
 module Classes = 
     let cell = "cell"
 
+let defaultValueRenderer (cell: Cell) (row: RowIndex) (col: ColumnIndex) =
+    match cell.value with
+    | null -> ""
+    | value -> value.ToString()
+
 let prepareProps (props: ReactDatasheetProps seq) = 
     // Default the ValueRenderer (so the user doesn't have to add it every time)
     let props = 
-        if props |> Seq.exists(function | ValueRenderer _ -> true | _ -> false) then props
-        else Seq.append (seq { ValueRenderer (fun cell row col -> cell.value.ToString()) }) props
+        if props |> Seq.exists(function | ValueRenderer _ -> true | _ -> false) 
+        then props
+        else Seq.append (seq { ValueRenderer defaultValueRenderer }) props
     
     JsInterop.keyValueList CaseRules.LowerFirst props
 
