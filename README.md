@@ -1,10 +1,13 @@
 # Fable.ReactDataSheet
 A Fable wrapper around nadbm/react-datasheet for creating Excel-like tables
 
-See documentation for the underlying React library here:
+See documentation for the underlying React library here: 
 https://github.com/nadbm/react-datasheet
 
-Many (but not all) of the features are supported in this wrapper, including the ability to create cells with custom editors.
+Demo:
+https://nadbm.github.io/react-datasheet/
+
+Many (but not all) of the features are supported in this wrapper.  
 
 ## Basic Usage
 ```fsharp
@@ -50,3 +53,10 @@ ReactDataSheet [
     )
 ]
 ```
+
+# Installation
+* `npm install react-datasheet --save`
+* Copy `ReactDataSheet.fs` into your codebase (maybe I'll add a nuget package later)
+* Import css file: `importAll "../node_modules/react-datasheet/lib/react-datasheet.css"`
+* Profit!
+
