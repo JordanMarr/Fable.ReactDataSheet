@@ -1,6 +1,10 @@
 # Fable.ReactDataSheet
 A Fable wrapper around nadbm/react-datasheet for creating Excel-like tables
 
+![image](https://user-images.githubusercontent.com/1030435/149204330-ae6d39d7-2e6e-499b-adf0-e0694f714e5d.png)
+
+Great for quickly entering data; tab and enter works just like in Excel.
+
 See documentation for the underlying React library here: 
 https://github.com/nadbm/react-datasheet
 
@@ -27,9 +31,8 @@ ReactDataSheet [
 ReactDataSheet [ 
     Data model.Rows
     OnCellsChanged (fun changes added -> 
-        mergeChanges model.Rows changes added
-        |> UpdateRows 
-        |> dispatch 
+        let rows = mergeChanges model.Rows changes added
+        dispatch (UpdateRows rows)
     )
     SheetRenderer (fun e ->
         table [Class e.className] [
