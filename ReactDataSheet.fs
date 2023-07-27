@@ -1,8 +1,16 @@
 // fsharplint:disable RecordFieldNames
 module Fable.ReactDataSheet
 
+open System
 open Fable.Core
 open Fable.React
+
+type ParseResult = string[][]
+
+let toParseResult (results: string seq) = 
+    results 
+    |> Seq.map (fun s -> [| s |])
+    |> Seq.toArray
 
 type ReactDatasheetProps = 
     /// An array of cell arrays.
@@ -24,6 +32,8 @@ type ReactDatasheetProps =
     | DataEditor of (DataEditorProps -> ReactElement)
     | SheetRenderer of (SheetRendererProps -> ReactElement)
     | RowRenderer of (RowRendererProps -> ReactElement)
+    /// Provides the ability to transform pasted data. Usage ex: [ "1"; "2" ] |> toParseResult
+    | ParsePaste of (string -> ParseResult)
 
 and Row = Cell []
 and ColumnIndex = int
@@ -78,7 +88,7 @@ and DataEditorProps = {
     cell: Cell
     onChange: (string -> unit)
     onKeyDown: (Browser.Types.KeyboardEvent -> unit)
-    onCommit: (obj -> Browser.Types.Event -> unit)
+    onCommit: (obj -> unit)
     onRevert: (unit -> unit)
 }
 
@@ -120,3 +130,54 @@ let prepareProps (props: ReactDatasheetProps seq) =
 
 let ReactDataSheet props = 
     ofImport "default" "react-datasheet" (prepareProps props) []
+
+let defaultDataEditor (props: DataEditorProps) =
+    ofImport "DataEditor" "react-datasheet" props []
+
+open System
+open Microsoft.FSharp.Collections
+
+/// A helper function that can be used within OnCellsChanged to update Data with new and edited cells.
+let mergeChanges (rows: Row[]) (changes: CellsChangedArgs []) (added: CellsAddedArgs[]) =
+    let rows = rows |> Array.copy
+
+    for c in changes do
+        rows.[c.row].[c.col] <- 
+            match c.cell.``component`` with
+            | Some comp -> Cell.Create(c.value, comp)
+            | None -> Cell.Create(c.value)
+
+    let added = if added |> isNull then [||] else added // React lib returns null if empty
+
+    let maxRowIdx = 
+        if added = Array.empty then -1
+        else added |> Array.map (fun a -> a.row) |> Array.max
+    
+    let newRows = 
+        if maxRowIdx > (rows.Length - 1) then
+            let startRowIdx = rows.Length
+            [|for rowIdx in [startRowIdx .. maxRowIdx] do
+                match rows |> Array.tryHead with
+                | Some firstRow -> 
+                    firstRow |> Array.map (fun c -> { c with value = "" })
+                | None -> 
+                    [||]
+            |]
+        else
+            [||]
+
+
+    let data = Array.append rows newRows
+
+    for a in added do 
+        if a.row < data.Length then
+            let row = data.[a.row]
+            if a.col < row.Length then
+                let cell = data.[a.row].[a.col]
+                data.[a.row].[a.col] <-
+                    { cell with value = a.value }
+
+    data
+            
+    
+
