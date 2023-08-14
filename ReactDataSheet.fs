@@ -4,6 +4,7 @@ module Fable.ReactDataSheet
 open System
 open Fable.Core
 open Fable.React
+open Fable.React.Helpers
 
 type ParseResult = string[][]
 
@@ -16,9 +17,9 @@ type ReactDatasheetProps =
     /// An array of cell arrays.
     | Data of Row []
     /// Provides the ability to override specific cells view mode.
-    | ValueRenderer of (Cell -> RowIndex -> ColumnIndex -> string)
+    | ValueRenderer of (Cell -> RowIndex -> ColumnIndex -> ReactElement)
     /// Provides the ability to override specific cells edit mode.
-    | DataRenderer of (Cell -> RowIndex -> ColumnIndex -> string)
+    | DataRenderer of (Cell -> RowIndex -> ColumnIndex -> ReactElement)
     /// Provides the ability to handle changes in specific cells.
     | OnCellsChanged of (CellsChangedArgs array -> CellsAddedArgs array -> unit)
     /// Determines whether the keyboard can navigate to a cell.
@@ -51,6 +52,11 @@ with
     static member Create(value, ?cmp) =
         { Cell.value = value
           Cell.``component`` = cmp }
+
+    /// Creates a read-only cell.
+    static member CreateRO(value) = 
+        { Cell.value = value
+          Cell.``component`` = Some (span [] [ str $"{value}" ]) }
 
 and CellsChangedArgs = {
     cell: Cell
@@ -116,8 +122,8 @@ module Classes =
 
 let defaultValueRenderer (cell: Cell) (row: RowIndex) (col: ColumnIndex) =
     match cell.value with
-    | null -> ""
-    | value -> value.ToString()
+    | null -> str ""
+    | value -> str $"{value}"
 
 let prepareProps (props: ReactDatasheetProps seq) = 
     // Default the ValueRenderer (so the user doesn't have to add it every time)
